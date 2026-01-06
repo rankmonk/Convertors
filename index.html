@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marketing Calculator | Conversion Rate, ROI, ROAS</title>
+    <style>
+      :root {
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        display: flex;
+        justify-content: center;
+      }
+      .card {
+        max-width: 960px;
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+        letter-spacing: -0.5px;
+      }
+      p.lead {
+        margin: 0 0 20px;
+        color: #475569;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #0f172a;
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 15px;
+        background: #f8fafc;
+      }
+      input:focus {
+        outline: 2px solid #2563eb;
+        background: #fff;
+      }
+      .section {
+        margin-top: 20px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+      }
+      .section h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .result {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        margin-top: 8px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        font-weight: 700;
+      }
+      .result small {
+        display: block;
+        font-weight: 500;
+        color: #475569;
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 18px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .primary {
+        background: #2563eb;
+        color: #fff;
+      }
+      .ghost {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+      .footnote {
+        margin-top: 18px;
+        color: #475569;
+        font-size: 14px;
+      }
+      @media (max-width: 640px) {
+        body {
+          padding: 16px;
+        }
+        .card {
+          padding: 18px;
+        }
+      }
+    </style>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div class="card">
+      <div id="root"></div>
+    </div>
+    <script type="text/babel">
+      const numberOrNull = (value) => {
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+
+      const formatPct = (value) =>
+        value === null ? "—" : `${value.toFixed(2)}%`;
+
+      const formatRatio = (value) =>
+        value === null ? "—" : `${value.toFixed(2)}x`;
+
+      const App = () => {
+        const [inputs, setInputs] = React.useState({
+          visitors: "",
+          conversions: "",
+          revenue: "",
+          cost: "",
+          adSpend: "",
+          initialValue: "",
+          finalValue: "",
+          reversePercent: "",
+          reverseFinalValue: "",
+        });
+
+        const update = (key) => (event) =>
+          setInputs((prev) => ({ ...prev, [key]: event.target.value }));
+
+        const reset = () =>
+          setInputs({
+            visitors: "",
+            conversions: "",
+            revenue: "",
+            cost: "",
+            adSpend: "",
+            initialValue: "",
+            finalValue: "",
+            reversePercent: "",
+            reverseFinalValue: "",
+          });
+
+        const visitors = numberOrNull(inputs.visitors);
+        const conversions = numberOrNull(inputs.conversions);
+        const revenue = numberOrNull(inputs.revenue);
+        const cost = numberOrNull(inputs.cost);
+        const adSpend = numberOrNull(inputs.adSpend);
+        const initialValue = numberOrNull(inputs.initialValue);
+        const finalValue = numberOrNull(inputs.finalValue);
+        const reversePercent = numberOrNull(inputs.reversePercent);
+        const reverseFinalValue = numberOrNull(inputs.reverseFinalValue);
+
+        const conversionRate =
+          visitors && conversions >= 0 && visitors > 0
+            ? (conversions / visitors) * 100
+            : null;
+
+        const roi =
+          cost !== null && revenue !== null && cost !== 0
+            ? ((revenue - cost) / cost) * 100
+            : null;
+
+        const roas =
+          adSpend !== null && adSpend > 0 && revenue !== null
+            ? revenue / adSpend
+            : null;
+
+        const percentGrowth =
+          initialValue !== null &&
+          finalValue !== null &&
+          initialValue !== 0
+            ? ((finalValue - initialValue) / initialValue) * 100
+            : null;
+
+        const reverseOriginal =
+          reversePercent !== null &&
+          reverseFinalValue !== null &&
+          reversePercent !== -100
+            ? reverseFinalValue / (1 + reversePercent / 100)
+            : null;
+
+        return (
+          <div>
+            <header>
+              <h1>Marketing Performance Calculator</h1>
+              <p className="lead">
+                Enter your campaign metrics to instantly see Conversion Rate, ROI, and ROAS.
+              </p>
+            </header>
+
+            <div className="section">
+              <h2>Inputs</h2>
+              <div className="grid">
+                <div>
+                  <label htmlFor="visitors">Website visits</label>
+                  <input
+                    id="visitors"
+                    type="number"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="e.g. 1200"
+                    value={inputs.visitors}
+                    onChange={update("visitors")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="conversions">Conversions</label>
+                  <input
+                    id="conversions"
+                    type="number"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="e.g. 96"
+                    value={inputs.conversions}
+                    onChange={update("conversions")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="revenue">Revenue</label>
+                  <input
+                    id="revenue"
+                    type="number"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="e.g. 18000"
+                    value={inputs.revenue}
+                    onChange={update("revenue")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="cost">Total cost</label>
+                  <input
+                    id="cost"
+                    type="number"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="e.g. 9000"
+                    value={inputs.cost}
+                    onChange={update("cost")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="adSpend">Ad spend</label>
+                  <input
+                    id="adSpend"
+                    type="number"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="e.g. 7500"
+                    value={inputs.adSpend}
+                    onChange={update("adSpend")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="initialValue">Initial value</label>
+                  <input
+                    id="initialValue"
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="e.g. 1000"
+                    value={inputs.initialValue}
+                    onChange={update("initialValue")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="finalValue">Final value</label>
+                  <input
+                    id="finalValue"
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="e.g. 1300"
+                    value={inputs.finalValue}
+                    onChange={update("finalValue")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="reversePercent">Change % (for reverse)</label>
+                  <input
+                    id="reversePercent"
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="e.g. 25"
+                    value={inputs.reversePercent}
+                    onChange={update("reversePercent")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="reverseFinalValue">Final value (for reverse)</label>
+                  <input
+                    id="reverseFinalValue"
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="e.g. 1250"
+                    value={inputs.reverseFinalValue}
+                    onChange={update("reverseFinalValue")}
+                  />
+                </div>
+              </div>
+              <div className="actions">
+                <button className="primary" onClick={() => null}>Values update live</button>
+                <button className="ghost" onClick={reset}>Reset</button>
+              </div>
+            </div>
+
+            <div className="section">
+              <h2>Results</h2>
+              <div className="result">
+                <div>
+                  Conversion Rate
+                  <small>(Conversions ÷ Visits)</small>
+                </div>
+                <div>{formatPct(conversionRate)}</div>
+              </div>
+              <div className="result">
+                <div>
+                  ROI
+                  <small>((Revenue − Cost) ÷ Cost)</small>
+                </div>
+                <div>{formatPct(roi)}</div>
+              </div>
+              <div className="result">
+                <div>
+                  ROAS
+                  <small>(Revenue ÷ Ad Spend)</small>
+                </div>
+                <div>{formatRatio(roas)}</div>
+              </div>
+              <div className="result">
+                <div>
+                  Percentage Growth
+                  <small>((Final − Initial) ÷ Initial)</small>
+                </div>
+                <div>{formatPct(percentGrowth)}</div>
+              </div>
+              <div className="result">
+                <div>
+                  Reverse Percentage
+                  <small>Original value given final and % change</small>
+                </div>
+                <div>{reverseOriginal === null ? "—" : reverseOriginal.toFixed(2)}</div>
+              </div>
+            </div>
+
+            <p className="footnote">
+              Tip: Conversion Rate and ROI are shown as percentages; ROAS as a spend multiplier.
+            </p>
+          </div>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
