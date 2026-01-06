@@ -141,6 +141,7 @@
         value === null ? "—" : `${value.toFixed(2)}x`;
 
       const App = () => {
+        const [selectedCalc, setSelectedCalc] = React.useState("conversionRate");
         const [inputs, setInputs] = React.useState({
           visitors: "",
           conversions: "",
@@ -156,7 +157,7 @@
         const update = (key) => (event) =>
           setInputs((prev) => ({ ...prev, [key]: event.target.value }));
 
-        const reset = () =>
+        const reset = () => {
           setInputs({
             visitors: "",
             conversions: "",
@@ -168,6 +169,12 @@
             reversePercent: "",
             reverseFinalValue: "",
           });
+        };
+
+        const resetAll = () => {
+          reset();
+          setSelectedCalc("conversionRate");
+        };
 
         const visitors = numberOrNull(inputs.visitors);
         const conversions = numberOrNull(inputs.conversions);
@@ -208,6 +215,193 @@
             ? reverseFinalValue / (1 + reversePercent / 100)
             : null;
 
+        const renderInputs = () => {
+          switch (selectedCalc) {
+            case "conversionRate":
+              return (
+                <>
+                  <div>
+                    <label htmlFor="visitors">Website visits</label>
+                    <input
+                      id="visitors"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="e.g. 1200"
+                      value={inputs.visitors}
+                      onChange={update("visitors")}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="conversions">Conversions</label>
+                    <input
+                      id="conversions"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="e.g. 96"
+                      value={inputs.conversions}
+                      onChange={update("conversions")}
+                    />
+                  </div>
+                </>
+              );
+            case "roi":
+              return (
+                <>
+                  <div>
+                    <label htmlFor="revenue">Revenue</label>
+                    <input
+                      id="revenue"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="e.g. 18000"
+                      value={inputs.revenue}
+                      onChange={update("revenue")}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="cost">Total cost</label>
+                    <input
+                      id="cost"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="e.g. 9000"
+                      value={inputs.cost}
+                      onChange={update("cost")}
+                    />
+                  </div>
+                </>
+              );
+            case "roas":
+              return (
+                <>
+                  <div>
+                    <label htmlFor="revenue">Revenue</label>
+                    <input
+                      id="revenue"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="e.g. 18000"
+                      value={inputs.revenue}
+                      onChange={update("revenue")}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="adSpend">Ad spend</label>
+                    <input
+                      id="adSpend"
+                      type="number"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="e.g. 7500"
+                      value={inputs.adSpend}
+                      onChange={update("adSpend")}
+                    />
+                  </div>
+                </>
+              );
+            case "growth":
+              return (
+                <>
+                  <div>
+                    <label htmlFor="initialValue">Initial value</label>
+                    <input
+                      id="initialValue"
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="e.g. 1000"
+                      value={inputs.initialValue}
+                      onChange={update("initialValue")}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="finalValue">Final value</label>
+                    <input
+                      id="finalValue"
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="e.g. 1300"
+                      value={inputs.finalValue}
+                      onChange={update("finalValue")}
+                    />
+                  </div>
+                </>
+              );
+            case "reverse":
+              return (
+                <>
+                  <div>
+                    <label htmlFor="reversePercent">Change % (for reverse)</label>
+                    <input
+                      id="reversePercent"
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="e.g. 25"
+                      value={inputs.reversePercent}
+                      onChange={update("reversePercent")}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="reverseFinalValue">Final value (for reverse)</label>
+                    <input
+                      id="reverseFinalValue"
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="e.g. 1250"
+                      value={inputs.reverseFinalValue}
+                      onChange={update("reverseFinalValue")}
+                    />
+                  </div>
+                </>
+              );
+            default:
+              return null;
+          }
+        };
+
+        const renderResult = () => {
+          switch (selectedCalc) {
+            case "conversionRate":
+              return {
+                title: "Conversion Rate",
+                hint: "Conversions ÷ Visits",
+                value: formatPct(conversionRate),
+              };
+            case "roi":
+              return {
+                title: "ROI",
+                hint: "(Revenue − Cost) ÷ Cost",
+                value: formatPct(roi),
+              };
+            case "roas":
+              return {
+                title: "ROAS",
+                hint: "Revenue ÷ Ad Spend",
+                value: formatRatio(roas),
+              };
+            case "growth":
+              return {
+                title: "Percentage Growth",
+                hint: "(Final − Initial) ÷ Initial",
+                value: formatPct(percentGrowth),
+              };
+            case "reverse":
+              return {
+                title: "Reverse Percentage",
+                hint: "Original value given final and % change",
+                value: reverseOriginal === null ? "—" : reverseOriginal.toFixed(2),
+              };
+            default:
+              return null;
+          }
+        };
+
+        const result = renderResult();
+
         return (
           <div>
             <header>
@@ -218,156 +412,56 @@
             </header>
 
             <div className="section">
-              <h2>Inputs</h2>
+              <h2>Pick a calculation</h2>
               <div className="grid">
                 <div>
-                  <label htmlFor="visitors">Website visits</label>
-                  <input
-                    id="visitors"
-                    type="number"
-                    min="0"
-                    inputMode="decimal"
-                    placeholder="e.g. 1200"
-                    value={inputs.visitors}
-                    onChange={update("visitors")}
-                  />
+                  <label htmlFor="calcType">Calculation</label>
+                  <select
+                    id="calcType"
+                    value={selectedCalc}
+                    onChange={(e) => setSelectedCalc(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "10px",
+                      fontSize: "15px",
+                      background: "#f8fafc",
+                    }}
+                  >
+                    <option value="conversionRate">Conversion Rate</option>
+                    <option value="roi">ROI</option>
+                    <option value="roas">ROAS</option>
+                    <option value="growth">Percentage Growth</option>
+                    <option value="reverse">Reverse Percentage</option>
+                  </select>
                 </div>
-                <div>
-                  <label htmlFor="conversions">Conversions</label>
-                  <input
-                    id="conversions"
-                    type="number"
-                    min="0"
-                    inputMode="decimal"
-                    placeholder="e.g. 96"
-                    value={inputs.conversions}
-                    onChange={update("conversions")}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="revenue">Revenue</label>
-                  <input
-                    id="revenue"
-                    type="number"
-                    min="0"
-                    inputMode="decimal"
-                    placeholder="e.g. 18000"
-                    value={inputs.revenue}
-                    onChange={update("revenue")}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="cost">Total cost</label>
-                  <input
-                    id="cost"
-                    type="number"
-                    min="0"
-                    inputMode="decimal"
-                    placeholder="e.g. 9000"
-                    value={inputs.cost}
-                    onChange={update("cost")}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="adSpend">Ad spend</label>
-                  <input
-                    id="adSpend"
-                    type="number"
-                    min="0"
-                    inputMode="decimal"
-                    placeholder="e.g. 7500"
-                    value={inputs.adSpend}
-                    onChange={update("adSpend")}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="initialValue">Initial value</label>
-                  <input
-                    id="initialValue"
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="e.g. 1000"
-                    value={inputs.initialValue}
-                    onChange={update("initialValue")}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="finalValue">Final value</label>
-                  <input
-                    id="finalValue"
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="e.g. 1300"
-                    value={inputs.finalValue}
-                    onChange={update("finalValue")}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="reversePercent">Change % (for reverse)</label>
-                  <input
-                    id="reversePercent"
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="e.g. 25"
-                    value={inputs.reversePercent}
-                    onChange={update("reversePercent")}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="reverseFinalValue">Final value (for reverse)</label>
-                  <input
-                    id="reverseFinalValue"
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="e.g. 1250"
-                    value={inputs.reverseFinalValue}
-                    onChange={update("reverseFinalValue")}
-                  />
-                </div>
+              </div>
+            </div>
+
+            <div className="section">
+              <h2>Inputs</h2>
+              <div className="grid">
+                {renderInputs()}
               </div>
               <div className="actions">
                 <button className="primary" onClick={() => null}>Values update live</button>
-                <button className="ghost" onClick={reset}>Reset</button>
+                <button className="ghost" onClick={reset}>Reset inputs</button>
+                <button className="ghost" onClick={resetAll}>Reset all</button>
               </div>
             </div>
 
             <div className="section">
               <h2>Results</h2>
-              <div className="result">
-                <div>
-                  Conversion Rate
-                  <small>(Conversions ÷ Visits)</small>
+              {result && (
+                <div className="result">
+                  <div>
+                    {result.title}
+                    <small>{result.hint}</small>
+                  </div>
+                  <div>{result.value}</div>
                 </div>
-                <div>{formatPct(conversionRate)}</div>
-              </div>
-              <div className="result">
-                <div>
-                  ROI
-                  <small>((Revenue − Cost) ÷ Cost)</small>
-                </div>
-                <div>{formatPct(roi)}</div>
-              </div>
-              <div className="result">
-                <div>
-                  ROAS
-                  <small>(Revenue ÷ Ad Spend)</small>
-                </div>
-                <div>{formatRatio(roas)}</div>
-              </div>
-              <div className="result">
-                <div>
-                  Percentage Growth
-                  <small>((Final − Initial) ÷ Initial)</small>
-                </div>
-                <div>{formatPct(percentGrowth)}</div>
-              </div>
-              <div className="result">
-                <div>
-                  Reverse Percentage
-                  <small>Original value given final and % change</small>
-                </div>
-                <div>{reverseOriginal === null ? "—" : reverseOriginal.toFixed(2)}</div>
-              </div>
+              )}
             </div>
 
             <p className="footnote">
