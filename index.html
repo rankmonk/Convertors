@@ -140,9 +140,13 @@
       const formatRatio = (value) =>
         value === null ? "—" : `${value.toFixed(2)}x`;
 
+      const formatNumber = (value) =>
+        value === null ? "—" : `${value.toFixed(2)}`;
+
       const App = () => {
         const [selectedCalc, setSelectedCalc] = React.useState("conversionRate");
         const [inputs, setInputs] = React.useState({
+          userName: "",
           visitors: "",
           conversions: "",
           revenue: "",
@@ -152,6 +156,8 @@
           finalValue: "",
           reversePercent: "",
           reverseFinalValue: "",
+          partValue: "",
+          wholeValue: "",
         });
 
         const update = (key) => (event) =>
@@ -159,6 +165,7 @@
 
         const reset = () => {
           setInputs({
+            userName: "",
             visitors: "",
             conversions: "",
             revenue: "",
@@ -168,6 +175,8 @@
             finalValue: "",
             reversePercent: "",
             reverseFinalValue: "",
+            partValue: "",
+            wholeValue: "",
           });
         };
 
@@ -185,6 +194,8 @@
         const finalValue = numberOrNull(inputs.finalValue);
         const reversePercent = numberOrNull(inputs.reversePercent);
         const reverseFinalValue = numberOrNull(inputs.reverseFinalValue);
+        const partValue = numberOrNull(inputs.partValue);
+        const wholeValue = numberOrNull(inputs.wholeValue);
 
         const conversionRate =
           visitors && conversions >= 0 && visitors > 0
@@ -213,6 +224,13 @@
           reverseFinalValue !== null &&
           reversePercent !== -100
             ? reverseFinalValue / (1 + reversePercent / 100)
+            : null;
+
+        const percentOf =
+          partValue !== null &&
+          wholeValue !== null &&
+          wholeValue !== 0
+            ? (partValue / wholeValue) * 100
             : null;
 
         const renderInputs = () => {
@@ -358,6 +376,33 @@
                   </div>
                 </>
               );
+            case "partOfWhole":
+              return (
+                <>
+                  <div>
+                    <label htmlFor="partValue">Part (X)</label>
+                    <input
+                      id="partValue"
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="e.g. 25"
+                      value={inputs.partValue}
+                      onChange={update("partValue")}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="wholeValue">Whole (Y)</label>
+                    <input
+                      id="wholeValue"
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="e.g. 200"
+                      value={inputs.wholeValue}
+                      onChange={update("wholeValue")}
+                    />
+                  </div>
+                </>
+              );
             default:
               return null;
           }
@@ -395,12 +440,37 @@
                 hint: "Original value given final and % change",
                 value: reverseOriginal === null ? "—" : reverseOriginal.toFixed(2),
               };
+            case "partOfWhole":
+              return {
+                title: "What % is X of Y?",
+                hint: "X ÷ Y",
+                value: formatPct(percentOf),
+              };
             default:
               return null;
           }
         };
 
         const result = renderResult();
+        const summary = (() => {
+          const namePrefix = inputs.userName ? `${inputs.userName}, ` : "";
+          switch (selectedCalc) {
+            case "conversionRate":
+              return `${namePrefix}your conversion rate is ${formatPct(conversionRate)}.`;
+            case "roi":
+              return `${namePrefix}your ROI is ${formatPct(roi)}.`;
+            case "roas":
+              return `${namePrefix}your ROAS is ${formatRatio(roas)}.`;
+            case "growth":
+              return `${namePrefix}the percentage growth is ${formatPct(percentGrowth)}.`;
+            case "reverse":
+              return `${namePrefix}the original value is ${formatNumber(reverseOriginal)} based on the provided change.`;
+            case "partOfWhole":
+              return `${namePrefix}${formatPct(percentOf)} of the total.`;
+            default:
+              return "";
+          }
+        })();
 
         return (
           <div>
@@ -409,6 +479,11 @@
               <p className="lead">
                 Enter your campaign metrics to instantly see Conversion Rate, ROI, and ROAS.
               </p>
+              {inputs.userName && (
+                <p className="lead" style={{ marginTop: "6px" }}>
+                  Hello, {inputs.userName}!
+                </p>
+              )}
             </header>
 
             <div className="section">
@@ -434,6 +509,7 @@
                     <option value="roas">ROAS</option>
                     <option value="growth">Percentage Growth</option>
                     <option value="reverse">Reverse Percentage</option>
+                    <option value="partOfWhole">% of total (X from Y)</option>
                   </select>
                 </div>
               </div>
@@ -442,6 +518,16 @@
             <div className="section">
               <h2>Inputs</h2>
               <div className="grid">
+                <div>
+                  <label htmlFor="userName">Your name (optional)</label>
+                  <input
+                    id="userName"
+                    type="text"
+                    placeholder="e.g. Alex"
+                    value={inputs.userName}
+                    onChange={update("userName")}
+                  />
+                </div>
                 {renderInputs()}
               </div>
               <div className="actions">
@@ -461,6 +547,11 @@
                   </div>
                   <div>{result.value}</div>
                 </div>
+              )}
+              {result && (
+                <p className="lead" style={{ marginTop: "12px" }}>
+                  {summary}
+                </p>
               )}
             </div>
 
